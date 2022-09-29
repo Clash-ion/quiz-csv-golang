@@ -1,26 +1,20 @@
 package questions
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"time"
 
-	// "github.com/Clash-ion/quiz-csv-golang/pkg/arg_parser"
 	"github.com/Clash-ion/quiz-csv-golang/pkg/utils"
 )
 
 var TotalQuestion int = 0
 
-//	type UserScore struct {
-//		CorrectAnswerCount   int
-//		IncorrectAnswerCount int
-//	}
 var Completed bool = false
 
-func QuestionConsumer(questionChannel chan []string, questionConsumerChannel chan int, cancelOrder chan bool, ctx context.Context) {
+func QuestionConsumer(questionChannel chan []string, questionConsumerChannel chan int, timeOutTime int) {
 	var userAnswer int = 0
 	for x := range questionChannel {
 		if !Completed {
@@ -33,13 +27,15 @@ func QuestionConsumer(questionChannel chan []string, questionConsumerChannel cha
 			if err != nil {
 				log.Panic("shit twice")
 			}
-			fmt.Println(Completed)
 			fmt.Printf("what is %d + %d\n", variable[0], variable[1])
 
 			timeInstA := time.Now()
 			fmt.Scan(&userAnswer)
 			timeInstB := time.Now()
-			if timeInstB.Sub(timeInstA).Seconds() > 3 {
+			if err != nil {
+				log.Fatal(err)
+			}
+			if timeInstB.Sub(timeInstA).Seconds() > float64(timeOutTime) {
 				Completed = true
 				fmt.Println("timeout")
 				for i := 0; i < 3; i++ {
@@ -76,7 +72,7 @@ func questionCreatorFromString(str string) ([]int, error) {
 	return []int{var1, var2}, nil
 }
 
-func QuestionProducer(filePath string, questionChannel chan []string, cancelOrder chan bool, ctx context.Context) {
+func QuestionProducer(filePath string, questionChannel chan []string) {
 	records := utils.ReadCsvFile(filePath)
 
 	for _, item := range records {

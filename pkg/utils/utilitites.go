@@ -22,13 +22,3 @@ func ReadCsvFile(filePath string) [][]string {
 	}
 	return records
 }
-
-// func CustomReader(ch chan int) error {
-// 	var x int
-// 	_, err := fmt.Scan(&x)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	ch <- x
-// 	return nil
-// }
