@@ -24,10 +24,12 @@ func main() {
 	utils.Wg.Add(1)
 	go func() {
 		for score := range questionConsumerChannel {
-			// fmt.Println("triggered")
 			userScore += score
 		}
-		utils.Wg.Done()
+		if !questions.Completed {
+			defer utils.Wg.Done()
+		}
+		// defer utils.Wg.Done()
 	}()
 	utils.Wg.Wait()
 	fmt.Printf("you got %v correct out of %v ", userScore, questions.TotalQuestion)

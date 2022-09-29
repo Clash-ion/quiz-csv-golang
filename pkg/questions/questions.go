@@ -14,68 +14,53 @@ import (
 
 var TotalQuestion int = 0
 
-// type UserScore struct {
-// 	CorrectAnswerCount   int
-// 	IncorrectAnswerCount int
-// }
+//	type UserScore struct {
+//		CorrectAnswerCount   int
+//		IncorrectAnswerCount int
+//	}
+var Completed bool = false
 
 func QuestionConsumer(questionChannel chan []string, questionConsumerChannel chan int, cancelOrder chan bool, ctx context.Context) {
 	var userAnswer int = 0
-	// var user_score UserScore
-	// fmt.Println()
-	defer utils.Wg.Done()
-
 	for x := range questionChannel {
-		TotalQuestion += 1
-		variable, err := questionCreatorFromString(x[0])
-		if err != nil {
-			log.Panic("shit once")
-		}
-		correctAnswer, err := strconv.Atoi(x[1])
-		if err != nil {
-			log.Panic("shit twice")
-		}
-		fmt.Printf("what is %d + %d\n", variable[0], variable[1])
-		// _, cancel := context.WithCancel(ctx)
-		// go func() {
-		// 	time.Sleep(3 * time.Second)
-		// 	if userAnswer == 0 {
-		// 		fmt.Println("3 sec ended")
-		// 		cancel()
-		// 		// return
-		// 	}
-		// }()
-		// ch := make(chan int)
-		// err = utils.CustomReader(ch)
-		// userAnswer = <-ch
-		timeInstA := time.Now()
-		fmt.Scan(&userAnswer)
-		timeInstB := time.Now()
-		if timeInstB.Sub(timeInstA).Seconds() > 3 {
-			// cancel()
-			// close(questionConsumerChannel)
-			for i := 0; i < 3; i++ {
-				utils.Wg.Done()
+		if !Completed {
+			TotalQuestion += 1
+			variable, err := questionCreatorFromString(x[0])
+			if err != nil {
+				log.Panic("shit once")
 			}
+			correctAnswer, err := strconv.Atoi(x[1])
+			if err != nil {
+				log.Panic("shit twice")
+			}
+			fmt.Println(Completed)
+			fmt.Printf("what is %d + %d\n", variable[0], variable[1])
 
+			timeInstA := time.Now()
+			fmt.Scan(&userAnswer)
+			timeInstB := time.Now()
+			if timeInstB.Sub(timeInstA).Seconds() > 3 {
+				Completed = true
+				fmt.Println("timeout")
+				for i := 0; i < 3; i++ {
+					utils.Wg.Done()
+				}
+			}
+			if !Completed {
+				if userAnswer == correctAnswer {
+					questionConsumerChannel <- 1
+					fmt.Println("you rock")
+				} else {
+					fmt.Println("wrong answer")
+				}
+			}
 		}
-		// wait for 3 sec and if input not provided then cancel this function which will calculate total correct for the user
-		// if err != nil {
-		// 	log.Panic(err)
-		// }
-		if userAnswer == correctAnswer {
-			questionConsumerChannel <- 1
-			fmt.Println("you rock")
-		} else {
-			// user_score.IncorrectAnswerCount += 1
-			fmt.Println("wrong answer")
-		}
-
 	}
-	// abcd
 	close(questionConsumerChannel)
-	fmt.Println("")
-	// return user_score
+	if !Completed {
+		defer utils.Wg.Done()
+	}
+
 }
 
 func questionCreatorFromString(str string) ([]int, error) {
@@ -93,16 +78,13 @@ func questionCreatorFromString(str string) ([]int, error) {
 
 func QuestionProducer(filePath string, questionChannel chan []string, cancelOrder chan bool, ctx context.Context) {
 	records := utils.ReadCsvFile(filePath)
-	defer utils.Wg.Done()
-	// cancel := context.CancelFunc
-	_, cancel := context.WithCancel(ctx)
-	// cancel()
-	defer cancel()
+
 	for _, item := range records {
-		// wg.Done()
-
 		questionChannel <- item
-
 	}
 	close(questionChannel)
+
+	if !Completed {
+		defer utils.Wg.Done()
+	}
 }
