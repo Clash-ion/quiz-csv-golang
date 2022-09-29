@@ -1,4 +1,4 @@
-module quiz-xsc
+module github.com/Clash-ion/quiz-csv-golang
 
 go 1.19
 
